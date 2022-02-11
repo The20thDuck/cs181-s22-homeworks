@@ -6,7 +6,6 @@
 
 import numpy as np
 import matplotlib
-matplotlib.use('WebAgg')
 import matplotlib.pyplot as plt
 
 
