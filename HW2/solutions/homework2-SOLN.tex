@@ -1,6 +1,5 @@
 \documentclass[submit]{harvardml}
 
-% FDV: Make sure all front matter has correct years, dates, book sections, etc.
 \course{CS181-S22}
 \assignment{Assignment \#2}
 \duedate{7:59pm EST, Feb 25th, 2022}
@@ -12,6 +11,7 @@
 \usepackage{fullpage}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{bbm}
 \usepackage{framed}
 \usepackage{color}
 \usepackage{soul}
@@ -85,7 +85,6 @@ Please submit your \textbf{\LaTeX\ file and code files to the Gradescope assignm
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Problem 1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \begin{problem}[Exploring Bias and Variance, 10 pts]
   In this problem, we will explore the bias and variance of a
   few different model classes when it comes to logistic regression.
@@ -153,14 +152,73 @@ Moreover, each plot also displays 1 of the randomly generated datasets and highl
 
 \end{problem}
 
+
 \newpage
 
 \subsection*{Solution}
 
+\begin{enumerate}
+
+
+            \item
+
+            See T2\_P1\_SOLN.py code for reference.
+
+            \item
+
+            Students were instructed to not change the randomized seed \verb|np.random.seed(1738)| in the starter code. They were also told to not change the randomized weight initialization code provided in the starter code. Thus, theoretically, students should have identical-looking plots. Nevertheless, if a student's plots do not look identical to the plots below, please give them the benefit of the doubt.
+
+            \includegraphics[scale=0.5]{solutions/T2_P1_plots/basis1.png}
+
+            \includegraphics[scale=0.5]{solutions/T2_P1_plots/basis2.png}
+
+            \includegraphics[scale=0.5]{solutions/T2_P1_plots/basis3.png}
+
+            \item
+
+            For basis 1, we can see that for most $x$, the difference between the green
+            and black curves is quite large; hence bias is relatively high. The vertical
+            spread of the individual models is relatively small; hence variance is relatively low.
+
+            As we continue to basis 2 and then basis 3 (increasing complexity), the difference between the green
+            and black curves progressively shrinks for most $x$, and the vertical spread
+            of the individual models progressively grows. That is, the bias decreases while the variance increases.
+
+            In expectation (over datasets), the more complex basis is better able to approximate the true process.
+            However, we can see that it also has greater potential to overfit to specific datasets, especially when
+            the number points is small.
+
+            \item
+
+            For this part, students should first be encouraged to experiment
+            with their code. Even for up to $N = 10000$, our solution code was
+            able to run in a reasonable amount of time. The three columns below
+            represent trials with $N = 100, 1000, 10000$, respectively:
+
+            \includegraphics[scale=0.3]{solutions/T2_P1_plots/basis1, N = 100.png}
+            \includegraphics[scale=0.3]{solutions/T2_P1_plots/basis1, N = 1000.png}
+            \includegraphics[scale=0.3]{solutions/T2_P1_plots/basis1, N = 10000.png}
+
+            \includegraphics[scale=0.3]{solutions/T2_P1_plots/basis2, N=100.png}
+            \includegraphics[scale=0.3]{solutions/T2_P1_plots/basis2, N=1000.png}
+            \includegraphics[scale=0.3]{solutions/T2_P1_plots/basis2, N=10000.png}
+
+            \includegraphics[scale=0.3]{solutions/T2_P1_plots/basis3, N=100.png}
+            \includegraphics[scale=0.3]{solutions/T2_P1_plots/basis3, N=1000.png}
+            \includegraphics[scale=0.3]{solutions/T2_P1_plots/basis3, N=10000.png}
+
+            With more data, we can see that the variance decreases across all models,
+            which is particularly visible in the region $x \approx 0$.
+            This makes sense because more data to train on provides finer constraint (across $x$)
+            on the shape of the learned model. We can see however that bias
+            levels off; this is due to the fact that our model families (chosen bases)
+            are simply limited in how well they can approximate $\sin x$.
+
+        \end{enumerate}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Problem 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \begin{problem}[Maximum likelihood in classification, 15pts]
 
   Consider now a generative $K$-class model.  We adopt class prior
@@ -235,11 +293,114 @@ $\boldX^{-\top} := (\boldX^{\top})^{-1}$
 
 
 \subsection*{Solution}
+            \newcommand{\yickindicator}{\mathbbm{1}_{\bold y_i = C_k}}
+            
+            % previously indicator was $y_{ik}$ which students found unclear
+
+            Let $\yickindicator$ be an indicator variable denoting whether some $\bold y_i$ is in the class $C_k$.
+
+            
+        \begin{enumerate}
+
+            \item The log-likelihood is given by:
+
+            $$\boxed{\ln p(\{\mathbf{x}_i, \mathbf{y}_i\} | \{\pi_k\})=
+            \sum_{i=1}^N\sum_{k=1}^K \yickindicator\big(\ln p(\boldx_i | \boldy_i = C_k) + \ln\pi_k\big)}
+            $$
+
+            Note that the class prior $\pi_k$ is part of the likelihood, as opposed to a \textit{model prior}
+
+
+            \item
+
+            Using the note at the end of the exercise, we know we need to maximize:
+            $$\ln p(\{\mathbf{x}_i, \mathbf{y}_i\} | \{\pi_k\})=
+            \sum_{i=1}^N\sum_{k=1}^K \yickindicator\big(\ln p(\boldx_i | \boldy_i = C_k) + \ln\pi_k\big)
+            + \lambda \left(
+            \left(\sum_{k=1}^K \pi_k\right) - 1\right)$$
+
+
+            We take the derivative with respect to $\pi_k$ and set it to $0$:
+            $$\sum_{i=1}^N \frac{\yickindicator}{\pi_{k}} + \lambda = 0$$
+
+            Rearrange to solve for $\pi_{k}$:
+            $$ \pi_{k} = \frac{-1}{\lambda} \sum_{i=1}^N \yickindicator$$
+
+            We take the derivative with respect to $\lambda$ and set it to 0 (note that this is our original constraint):
+
+            $$\sum_{k=1}^K \pi_k = 1$$
+
+            Plug $\pi_{k}$ into this original constraint:
+
+            $$\sum_{k=1}^K \bigg( \frac{-1}{\lambda} \sum_{i=1}^N \yickindicator \bigg) = 1$$
+
+            Solve for $\lambda$:
+
+            $$\lambda = -\sum_{k=1}^K \sum_{i=1}^N \yickindicator = -N$$
+
+            $$\boxed{\hat{\pi_k} = \frac{1}{N}\sum_{i=1}^N\yickindicator}$$
+
+
+
+            Note that the MLE for the class-prior simply reflects the proportion of classes in our dataset.
+
+            \item
+
+            The log-likelihood can be written as such:
+            $$\ln p(\{\mathbf{x}_i, \mathbf{y}_i\} | \{\pi_k\})= \sum_{i=1}^N \sum_{k=1}^K \yickindicator
+            \left(-\frac{1}{2}(\mathbf{x}_i - \bmu_k)^T\bSigma^{-1} (\mathbf{x}_i - \bmu_k)\right) +
+            \text{constants w.r.t $\bmu_k$}$$
+            Using Equation 86 from the Matrix Cookbook, the gradient w.r.t $\bmu_k$ can be written as:
+            $$\boxed{\sum_{i=1}^N \yickindicator \bSigma^{-1} (\mathbf{x}_i - \bmu_k)}$$
+
+            \textbf{Common Errors:} Often, people would write something like the below to indicate that the log likelihood and the exponent of the gaussian are separated by an additive constant (wrt $\mu_k$)
+            $$\ln p(\{\mathbf{x}_i, \mathbf{y}_i\} | \{\pi_k\})\propto \sum_{i=1}^N \sum_{k=1}^K \yickindicator
+            \left(-\frac{1}{2}(\mathbf{x}_i - \bmu_k)^T\bSigma^{-1} (\mathbf{x}_i - \bmu_k)\right) $$
+            This is technically incorrect since the lefthand side and righthand side differ by an additive constant (wrt $\mu_k$) not a multiplicative constant. The confusion may stem from the fact that we can do the same type of analysis with multiplicative constants, in which case the $\propto$ captures the proportional relationship. In other words, we could do all of this analysis before the log, which would look something like the below.
+            \begin{equation}
+            \begin{split}
+            p(\{\mathbf{x}_i, \mathbf{y}_i\} | \{\pi_k\}) & = \prod_{i=1}^N \prod_{k=1}^K \big(p(\boldx_i | \boldy_i = C_k)\pi_k\big)^{\yickindicator}\\
+            & = \prod_{i=1}^N \prod_{k=1}^K \big((2\pi)^\frac{d}{2}|\Sigma|^{-\frac{1}{2}}e^{-\frac{1}{2}(\mathbf{x}_i - \bmu_k)^T\bSigma^{-1} (\mathbf{x}_i - \bmu_k)}\pi_k\big)^{\yickindicator}\\
+            & = \prod_{i=1}^N \prod_{k=1}^K \big(e^{-\frac{1}{2}(\mathbf{x}_i - \bmu_k)^T\bSigma^{-1} (\mathbf{x}_i - \bmu_k)}\big)^{\yickindicator}\prod_{i=1}^N \prod_{k=1}^K \big((2\pi)^\frac{d}{2}|\Sigma|^{-\frac{1}{2}}\pi_k\big)^{\yickindicator}\\
+            & \propto \prod_{i=1}^N \prod_{k=1}^K \big(e^{-\frac{1}{2}(\mathbf{x}_i - \bmu_k)^T\bSigma^{-1} (\mathbf{x}_i - \bmu_k)}\big)^{\yickindicator} \\
+            \end{split}
+            \end{equation}
+            The last line is equivalent to
+            $$\ln p(\{\mathbf{x}_i, \mathbf{y}_i\} | \{\pi_k\})= \sum_{i=1}^N \sum_{k=1}^K \yickindicator
+            \left(-\frac{1}{2}(\mathbf{x}_i - \bmu_k)^T\bSigma^{-1} (\mathbf{x}_i - \bmu_k)\right) +
+            \text{constants w.r.t $\bmu_k$}$$
+            Either methods for approaching this are fine, but just don't get confused between them!
+
+            \item We set the previous gradient equal to $0$ to obtain: $$\boxed{\hat \mu_k =
+            \frac{1}{\sum_{i=1}^N \yickindicator} \sum_{i=1}^N \yickindicator \mathbf{x}_i}$$
+
+            Again, an intuitive answer. Our best guess for the average feature vector for a given class is the average of all feature vectors of that class in our dataset.
+
+
+            \item
+            Starting with the log likelihood and using the two formulas in the cookbook mentioned above, the gradient w.r.t $\bSigma$
+            can be written as:
+            $$\boxed{\sum_{i=1}^N \sum_{k=1}^K \yickindicator \left[ - \frac{1}{2}\bSigma^{-T} +
+            \frac{1}{2} \bSigma^{-T} (\mathbf{x}_i - \bmu_k) (\mathbf{x}_i - \bmu_k)^T
+            \bSigma^{-T}\right]}$$
+
+
+            \item
+
+            Setting it to $0$ and multiply both sides by $\bSigma^{T}$ from the left and
+            right:
+            $$\sum_{i, k} \yickindicator \bSigma^T = \sum_{k, i} \yickindicator (\mathbf{x}_i -
+            \bmu_k) (\mathbf{x}_i - \bmu_k)^T$$
+            Taking the transpose (any matrix $VV^T$ is symmetric), we have:
+            $$\boxed{\hat \Sigma = \frac{1}{\sum_{i,k} \yickindicator}  \sum_{k, i} \yickindicator (\mathbf{x}_i -
+            \bmu_k) (\mathbf{x}_i - \bmu_k)^T}$$
+
+
+        \end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Problem 3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \begin{problem}[Classifying Stars, 15pts]
 
 You're tasked with classifying three different kinds of stars using their magnitudes and temperatures. See star.png for a plot of
@@ -342,8 +503,87 @@ You'll also need to modify the hyperparameter
 values in \texttt{T2\_P3.py} for logistic regression.
 \end{framed}
 
-
 \subsection*{Solution}
+
+
+        \begin{enumerate}
+
+
+        \item Your plots should look like the ones below.
+        These are, in order, multiclass logistic regression classifier, the generative classifier with a shared covariance matrix, the generative classifier with separate covariance matrices, and the KNN Models. \\
+
+
+        \begin{center}
+            \includegraphics[scale=0.5]{solutions/logistic_regression_result.png}
+        \end{center}
+        \begin{center}
+            \includegraphics[scale=0.5]{solutions/generative_result_shared_covariances.png}
+        \end{center}
+
+        \begin{center}
+            \includegraphics[scale=0.5]{solutions/generative_result_separate_covariances.png}
+        \end{center}
+
+        \begin{center}
+            \includegraphics[scale=0.5]{solutions/knn1_result.png}
+        \end{center}
+
+        \begin{center}
+            \includegraphics[scale=0.5]{solutions/knn3_result.png}
+        \end{center}
+
+        \begin{center}
+            \includegraphics[scale=0.5]{solutions/knn5_result.png}
+        \end{center}
+
+        \subsubsection*{What are the similarities and differences?}
+        This is a pretty open-ended question, so we will generally accept a broad range of answers. A few things that should be pretty clear: 1) the generative model with separate covariance matrices seems to model the distribution better than the generative model with a shared covariance matrix; 2) logistic regression and the generative model with shared covariance perform similarly 3) KNN Models perform more similarly to the logistic regression and generative model with shared covariance than with the generative with separate covariance, but the boundaries of the KNN Models are different from the logistic regression and generative model with shared covariance as the KNN Models in that they are very non-linear
+
+
+        \subsubsection*{What explains the differences?}
+        Having a shared covariance matrix means that each of the three classes have approximately the same shape, which is elongated from the bottom left to the top-right of the plot. However, just from visual inspection, we can see that the three classes actually have fairly different shapes, with some being elongated from bottom left to top right, and the red ones being at a right angle to those. So, having separate covariance matrices for each one seems to lead to a better-looking fit. Logistic Regression generally performs well, but since it enforces linear decision boundaries, there is a limit to its ability to model this data. KNN also generally does well, as the data provided was pretty well organized by class, but as a model that makes predictions from the closest 1, 3, or 5 neighbors, the boundaries are bound to be more messy, as when you move from one point to another, the closest neighbors differ greatly and in a non-linear way.
+
+        \item \subsubsection*{Logistic Regression Quantitative Analysis}
+
+        \begin{center}
+            \includegraphics[scale=.6]{solutions/logistic_regression_loss.png}
+        \end{center}
+
+        The above plot of loss during training came from using the hyperparameters $\eta = 0.001$ and $\lambda = 0.001$. You could have chosen different final values for hyperparameters, but you should have seen that training with $\eta$ of $0.05$ failed to converge and that using $\eta$ values of $0.01$ and $0.001$ led to successful convergence but differed in training time. The exact loss values will vary on different runs due to random weight initialization in the staff solution.
+
+        Note that since we didn't explicitly require any cross-validation on testing data, there is not much to conclude about $\lambda$. By definition, loss on training data with regularization will be higher than without. Good job if you went the extra step to observe its effect on held-out data.
+
+        \item \subsubsection*{Gaussian Generative Models Quantitative Analysis}
+
+        For the separate covariance case, we report a negative log likelihood of 64.17, and for the shared covariance case, we report a negative log likelihood of 116.57. Note that the definition of likelihood takes the class-prior probabilities into account. We see that the whole data negative log likelihood is lower for the separate covariance case, as expected.  Allowing separate covariance matrices fits the data better, and more probability mass is given to the data points we observe, increasing the whole data log likelihood and decreasing the negative log likelihood.
+
+        \item \subsubsection*{Test Stars}
+
+        The test star give the following classifications:
+        \begin{center}
+        \begin{tabular}{|c|c|c|}
+        \hline
+        Classifier & magnitude:6 temp:2 \\
+        \hline
+        Generative Shared Covariance & 1 \\
+        \hline
+        Generative Separate Covariance & 0 \\
+        \hline
+        Logistic Regression & 1 \\
+        \hline
+        KNN Model with k=1 & 0 \\
+        \hline
+        KNN Model with k=3 & 0 \\
+        \hline
+        KNN Model with k=5 & 0 \\
+        \hline
+
+        \end{tabular}
+        \end{center}
+        The Logistic Regression and Shared Covariance classifiers seem to disagree with the Separate Covariance and KNN classifier, and all four classifiers seem to be very confident about their predictions. It also isn't immediately obvious from the plot what the magnitude 6 and temperature 2 star should be classified as which suggests that we should be careful when relying on predictions for data points which are far from the training set.
+
+
+        \end{enumerate}
 
 \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
