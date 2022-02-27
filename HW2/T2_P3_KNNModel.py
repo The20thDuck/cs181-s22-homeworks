@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+from scipy.stats import mode
 
 # Please implement the predict() method of this class
 # You can add additional private methods by beginning them with
@@ -13,8 +15,9 @@ class KNNModel:
         self.K = k
 
     # Just to show how to make 'private' methods
-    def __dummyPrivateMethod(self, input):
-        return None
+    def __dist(self, x1, x2):
+        diff = x1-x2
+        return (diff[0]/3)**2+ (diff[1])**2
 
     # TODO: Implement this method!
     def predict(self, X_pred):
@@ -23,8 +26,8 @@ class KNNModel:
         # (currently meaningless) visualization.
         preds = []
         for x in X_pred:
-            z = np.cos(x ** 2).sum()
-            preds.append(1 + np.sign(z) * (np.abs(z) > 0.3))
+            distances = np.sum(((x - self.X)*np.array([[1/3, 1]]))**2, axis=1)
+            preds.append(mode(self.y[np.argsort(distances)[:self.K]])[0])
         return np.array(preds)
 
     # In KNN, "fitting" can be as simple as storing the data, so this has been written for you
@@ -33,3 +36,20 @@ class KNNModel:
     def fit(self, X, y):
         self.X = X
         self.y = y
+
+if __name__ == "__main__":
+    eta = 0.1 # Learning rate
+    lam = 0.1 # Lambda for regularization
+    star_labels = {
+        'Dwarf': 0,       # also corresponds to 'red' in the graphs
+        'Giant': 1,       # also corresponds to 'blue' in the graphs
+        'Supergiant': 2   # also corresponds to 'green' in the graphs
+    }
+    print(star_labels)
+    df = pd.read_csv('data/hr.csv')
+    X = df[['Magnitude', 'Temperature']].values
+    y = np.array([star_labels[x] for x in df['Type']])
+
+    lr = KNNModel(1)
+    lr.fit(X, y)
+    print(lr.predict(X))
