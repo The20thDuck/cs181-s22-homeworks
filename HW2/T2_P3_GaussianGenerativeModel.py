@@ -53,7 +53,7 @@ class GaussianGenerativeModel:
 
     def __predict_probs(self, X_pred):
         vals = np.stack(tuple(self.mvns[k].pdf(X_pred) for k in range(self.K)), axis=-1) * self.pi.reshape((1, -1))
-        return vals/np.sum(vals, axis=1, keepdims=True)
+        return vals
 
     # TODO: Implement this method!
     def predict(self, X_pred, get_probs=False):
@@ -63,7 +63,7 @@ class GaussianGenerativeModel:
         probs = self.__predict_probs(X_pred)
         pred = np.argmax(probs, axis=1)
         if get_probs:
-            print(probs)
+            print(probs/np.sum(probs, axis=1, keepdims=True))
         return pred
 
     # TODO: Implement this method!
